@@ -1,0 +1,499 @@
+<html>
+	<head>
+		<title>TEG</title>
+		<link rel="stylesheet" type="text/css" href="bootstrap-3.3.6-dist/css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="font-awesome-4.6.2/css/font-awesome.min.css">
+		<style type="text/css">
+		    #editor { 
+		        position: inherit;
+		        top: 0;
+		        right: 0;
+		        bottom: 0;
+		        left: 0;
+		    }
+		    .window-padding-0{
+		    	padding: 0%;
+		    	margin: 0%;
+		    }
+		    .full-size-container{
+		    	width: 100%;
+		    }
+		    .screen-lua{
+		    	width: 100%;
+		    	height: 100%;
+		    	border: none;
+		    }
+		    .mid-size-screen-container
+		    {
+		    	height: 80%;
+		    }
+		    #console{
+                font-family: "Lucida Console";
+                font-size: 13px;
+                position: fixed;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                height: 15%;
+                border-color: #222;
+                border-width: 1px 1px 1px 1px;
+                background-color: #000;
+                color: #0b0;
+                resize: none;
+            }
+            #console:focus {
+            	outline: none !important;
+			    border-color: #888;
+			    box-shadow: 0 0 10px #888;
+			}
+            .menu{
+            	border-color: #222;
+            	border-radius: 0;
+            }
+            .link{
+            	font-size: 17px;
+            	font-weight: bold;
+            }
+		</style>
+		<script type="text/javascript" src="jquery-2.1.4.min.js"></script>
+		<script type="text/javascript" src="bootstrap-3.3.6-dist/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="jszip.min.js"></script>
+		<script type="text/javascript" src="glMatrix/gl-matrix/common.js"></script>
+		<script type="text/javascript" src="glMatrix/gl-matrix/mat2.js"></script>
+		<script type="text/javascript" src="glMatrix/gl-matrix/mat3.js"></script>
+		<script type="text/javascript" src="glMatrix/gl-matrix/mat4.js"></script>
+		<script type="text/javascript" src="glMatrix/gl-matrix/mat2d.js"></script>
+		<script type="text/javascript" src="glMatrix/gl-matrix/vec2.js"></script>
+		<script type="text/javascript" src="glMatrix/gl-matrix/vec3.js"></script>
+		<script type="text/javascript" src="glMatrix/gl-matrix/vec4.js"></script>
+		<script type="text/javascript" src="glMatrix/gl-matrix/quat.js"></script>
+		<script type="text/javascript" src="webgl-utils.js"></script>
+		<script type="text/javascript" src="FileSaver.min.js"></script>
+		<script src="src-min/ace.js" type="text/javascript" charset="utf-8"></script>
+		<script id="shader-vColorNormal" type="x-shader/x-vertex">
+			attribute vec3 aVertexPosition;
+		    attribute vec3 aVertexNormal;
+		    attribute vec2 aTextureCoord;
+
+		    uniform mat4 uVMatrix;
+		    uniform mat4 uPMatrix;
+		    uniform mat4 uMMatrix;
+		    uniform mat3 uNMatrix;
+
+		    varying vec3 vNormal;
+
+		    void main(void) {
+		        gl_Position = uPMatrix * uVMatrix * uMMatrix * vec4(aVertexPosition, 1.0);
+		        vNormal = uNMatrix * aVertexNormal;
+		    }
+		</script>
+		<script id="shader-fColorNormal" type="x-shader/x-fragment">
+			precision mediump float;
+
+			varying vec3 vNormal;
+
+		    void main(void) {
+		    	gl_FragColor = vec4(vNormal, 1.0);
+		    }
+		</script>
+		<script id="shader-fPhong" type="x-shader/x-fragment">
+		    precision mediump float;
+
+		    struct pointLight{
+				vec3 center;
+				vec3 la;
+				vec3 ld;
+				vec3 ls;
+			};
+
+			struct dirLight{
+				vec3 center;
+				vec3 dir;
+				vec3 la;
+				vec3 ld;
+				vec3 ls;
+			};
+
+			struct spotLight{
+				vec3 center;
+				vec3 dir;
+				vec3 la;
+				vec3 ld;
+				vec3 ls;
+				float cutoff;
+				float exponent;
+			};
+
+			struct material{
+				vec3 ka;
+				vec3 kd;
+				vec3 ks;
+				float shininess;
+			};
+
+			uniform material mat;
+			uniform vec3 cameraPos;
+			uniform pointLight pLights[1];
+			uniform dirLight dLights[1];
+			uniform spotLight spLights[1];
+		    varying vec3 vNormal;
+		    varying vec3 position;
+
+		    void main(void) {
+		    	vec3 n = normalize(vNormal);
+				vec3 v = normalize(cameraPos - position);
+				vec3 color = vec3(0.0,0.0,0.0);
+
+				for(int i=0; i<0; i++)
+				{
+				
+					vec3 s = normalize(pLights[i].center - position);
+					vec3 r = reflect(-s, n);
+					
+					vec3 ambient  =  mat.ka * pLights[i].la;
+					vec3 diffuse  =  mat.kd * pLights[i].ld * max( dot(s,n), 0.0 );
+					vec3 specular =  mat.ks * pLights[i].ls * pow(max(dot(r,v), 0.0),mat.shininess);
+					
+					color += ambient + diffuse + specular;
+				}
+
+				for(int j=0; j<0; j++)
+				{
+					vec3 s = normalize(spLights[j].center - position);
+					
+					float angle = dot(-s,spLights[j].dir);
+					float cutoff = spLights[j].cutoff;
+					
+					vec3 ambient = mat.ka * spLights[j].la;
+					
+					if(angle > cutoff)
+					{
+					
+						float fDif = 1.0 - cutoff;
+						float fFactor = clamp((angle-cutoff)/fDif, 0.0, 1.0);
+						
+						float spotFactor = pow(fFactor,spLights[j].exponent);
+						vec3 r = reflect(-s, n);
+						vec3 diffuse  =  spotFactor * mat.kd * spLights[j].ld * max( dot(s, n), 0.0 );
+						vec3 specular =  mat.ks * spLights[j].ls * pow(max(dot(r,v), 0.0), mat.shininess);
+						
+						color += ambient + diffuse + specular;
+					}else
+						color += ambient;
+				}
+
+				for(int k=0; k<0; k++)
+				{
+					vec3 s = normalize(dLights[k].dir);
+					vec3 r = reflect(-s, n);
+						
+					vec3 ambient  =  mat.ka * dLights[k].la;
+					vec3 diffuse  =  mat.kd * dLights[k].ld * max( dot(s,n), 0.0 );
+					vec3 specular =  mat.ks * dLights[k].ls * pow(max(dot(r,v), 0.0),mat.shininess);
+						
+					color += ambient + diffuse + specular;
+				}
+	
+		    	gl_FragColor = vec4(color, 1.0);
+		    	
+		    }
+		</script>
+		<script id="shader-vPhong" type="x-shader/x-vertex">
+		    attribute vec3 aVertexPosition;
+		    attribute vec3 aVertexNormal;
+		    attribute vec2 aTextureCoord;
+
+		    uniform mat4 uVMatrix;
+		    uniform mat4 uPMatrix;
+		    uniform mat4 uMMatrix;
+		    uniform mat3 uNMatrix;
+
+		    varying vec3 vNormal;
+		    varying vec3 position;
+
+		    void main(void) {
+		        gl_Position = uPMatrix * uVMatrix * uMMatrix * vec4(aVertexPosition, 1.0);
+		        position = vec3(uMMatrix * vec4(aVertexPosition, 1.0));
+		        vNormal = uNMatrix * aVertexNormal;
+		    }
+		</script>
+		<script id="shader-fFlat" type="x-shader/x-fragment">
+		    precision mediump float;
+
+		    
+		    varying vec3 frontColor;
+		    varying vec3 backColor;
+
+		    void main(void){
+	
+		    	if( gl_FrontFacing ) {
+					gl_FragColor = vec4(frontColor, 1.0);
+				} else {
+					gl_FragColor = vec4(backColor, 1.0);
+				}
+		    	
+		    }
+		</script>
+		<script id="shader-vFlat" type="x-shader/x-vertex">
+		    attribute vec3 aVertexPosition;
+		    attribute vec3 aVertexNormal;
+		    attribute vec2 aTextureCoord;
+
+		    struct pointLight{
+				vec3 center;
+				vec3 la;
+				vec3 ld;
+				vec3 ls;
+			};
+
+			struct dirLight{
+				vec3 center;
+				vec3 dir;
+				vec3 la;
+				vec3 ld;
+				vec3 ls;
+			};
+
+			struct spotLight{
+				vec3 center;
+				vec3 dir;
+				vec3 la;
+				vec3 ld;
+				vec3 ls;
+				float cutoff;
+				float exponent;
+			};
+
+			struct material{
+				vec3 ka;
+				vec3 kd;
+				vec3 ks;
+				float shininess;
+			};
+
+		    uniform mat4 uVMatrix;
+		    uniform mat4 uPMatrix;
+		    uniform mat4 uMMatrix;
+		    uniform mat3 uNMatrix;
+
+			uniform material mat;
+			uniform vec3 cameraPos;
+			uniform pointLight pLights[1];
+			uniform dirLight dLights[1];
+			uniform spotLight spLights[1];
+
+		    varying vec3 frontColor;
+			varying vec3 backColor;
+
+		    void main(void) {
+
+		    	vec3 position = vec3(uMMatrix * vec4(aVertexPosition, 1.0));
+		    	vec3 vNormal = uNMatrix * aVertexNormal;
+		    	vec3 n = normalize(vNormal);
+		    	vec3 inverseN = -n;
+				vec3 v = normalize(vec3(cameraPos) - position);
+				vec3 color = vec3(0.0,0.0,0.0);
+				vec3 inverseColor = vec3(0.0,0.0,0.0);
+
+				for(int i=0; i<0; i++)
+				{
+					
+					vec3 s = normalize(pLights[i].center - position);
+					vec3 r = reflect(-s, n);
+						
+					vec3 ambient  =  mat.ka * pLights[i].la;
+					vec3 diffuse  =  mat.kd * pLights[i].ld * max( dot(s,n), 0.0 );
+					vec3 specular =  mat.ks * pLights[i].ls * pow(max(dot(r,v), 0.0),mat.shininess);
+						
+					color += ambient + diffuse + specular;
+
+					diffuse = mat.kd * pLights[i].ld * max( dot(s,inverseN), 0.0 );
+					specular =  mat.ks * pLights[i].ls * pow(max(dot(reflect(-s, inverseN),v), 0.0),mat.shininess);
+
+					inverseColor += ambient + diffuse + specular;
+				}
+
+				for(int j=0; j<0; j++)
+				{
+					vec3 s = normalize(spLights[j].center - position);
+						
+					float angle = dot(-s,spLights[j].dir);
+					float cutoff = spLights[j].cutoff;
+						
+					vec3 ambient = mat.ka * spLights[j].la;
+						
+					if(angle > cutoff)
+					{
+						
+						float fDif = 1.0 - cutoff;
+						float fFactor = clamp((angle-cutoff)/fDif, 0.0, 1.0);
+							
+						float spotFactor = pow(fFactor,spLights[j].exponent);
+						vec3 r = reflect(-s, n);
+						vec3 diffuse  =  spotFactor * mat.kd * spLights[j].ld * max( dot(s, n), 0.0 );
+						vec3 specular =  mat.ks * spLights[j].ls * pow(max(dot(r,v), 0.0), mat.shininess);
+							
+						color += ambient + diffuse + specular;
+
+						diffuse = spotFactor * mat.kd * spLights[j].ld * max( dot(s, inverseN), 0.0 );
+						specular =  mat.ks * spLights[j].ls * pow(max(dot(reflect(-s, inverseN),v), 0.0),mat.shininess);
+
+						inverseColor += ambient + diffuse + specular;
+					}else{
+						color += ambient;
+						inverseColor += ambient;
+					}
+				}
+
+				for(int k=0; k<0; k++)
+				{
+					vec3 s = normalize(dLights[k].dir);
+					vec3 r = reflect(-s, n);
+							
+					vec3 ambient  =  mat.ka * dLights[k].la;
+					vec3 diffuse  =  mat.kd * dLights[k].ld * max( dot(s,n), 0.0 );
+					vec3 specular =  mat.ks * dLights[k].ls * pow(max(dot(r,v), 0.0),mat.shininess);
+							
+					color += ambient + diffuse + specular;
+
+					diffuse = mat.kd * dLights[k].ld * max( dot(s,inverseN), 0.0 );
+					specular =  mat.ks * dLights[k].ls * pow(max(dot(reflect(-s, inverseN),v), 0.0),mat.shininess);
+
+					inverseColor += ambient + diffuse + specular;
+				}
+
+		        gl_Position = uPMatrix * uVMatrix * uMMatrix * vec4(aVertexPosition, 1.0);
+		        frontColor = color;
+		        backColor = inverseColor;
+		    }
+		</script>
+		<script type="text/javascript" src="ObjLoader.js"></script>
+		<script type="text/javascript" src="EngineObjects.js"></script>
+		<script type="text/javascript" src="Camera.js"></script>
+		<script type="text/javascript" src="Colors.js"></script>
+		<script type="text/javascript" src="semantic_parser.js"></script>
+		<script type="text/javascript" src="parser.js"></script>
+		<script type="text/javascript" src="Translation.js"></script>
+		<script>
+			function Do(){
+				svCont = -1;
+				sceneVertices = "var sceneObjects = [];\n";
+				codeFunctions = "function initScene(){\n\t\t\t\tvar Obj;\n\t\t\t\tvar aux;\n\t\t\t\tvar Light;\n\t\t\t\tvar verts = [];\n\t\t\t\tvar norms = [];\n\t\t\t\tvar coords = [];\n\t\t\t\tvar center = [];\n\t\t\t\tvar flatNorms = [];\n";
+				currentShader = shaderProgram.length-1;
+				currentModel = "None";
+				gl.useProgram(shaderProgram[currentShader]);
+				cut = false;
+				loopOn = false;
+				DisplayArray = new Array();
+				arrayLights = new Array();
+				arrayDirLights = new Array();
+			    arraySpotLights = new Array();
+				parser.parse(editor.getValue());
+				eval(program);
+				executionstack = new DataStructures.stack();
+				executionstack.push({});
+				if(translateCode){
+					var resultCode = code.replace("InIt", codeFunctions+"\n\t\t\t}");
+					graphicEngine = graphicEngine.replace("SeT", "initScene();");
+					var zip = new JSZip();
+					zip.file("example.html", resultCode);
+					zip.file("webgl-utils.js", webgl_utils);
+					zip.file("glMatrix.js", glMatrix);
+					zip.file("Globals.js", globals);
+					zip.file("ObjLoader.js", objLoader);
+					zip.file("Camera.js", cameraFile);
+					zip.file("Lights.js", lightsFile);
+					zip.file("GraphicEngine.js", graphicEngine);
+					zip.file("InitObj.js", initObject);
+					var content = zip.generate({type:"blob"});
+					saveAs(content, "example.zip");
+				}
+			}
+
+			function generateCode(){
+				var resultCode = code.replace("InIt", codeFunctions+"\n\t\t\t}");
+					graphicEngine = graphicEngine.replace("SeT", "initScene();");
+					var zip = new JSZip();
+					zip.file("example.html", resultCode);
+					zip.file("webgl-utils.js", webgl_utils);
+					zip.file("glMatrix.js", glMatrix);
+					zip.file("Globals.js", globals);
+					zip.file("Scene.js", sceneVertices);
+					zip.file("ObjLoader.js", objLoader);
+					zip.file("Camera.js", cameraFile);
+					zip.file("Lights.js", lightsFile);
+					zip.file("GraphicEngine.js", graphicEngine);
+					zip.file("InitObj.js", initObject);
+					var content = zip.generate({type:"blob"});
+					saveAs(content, "example.zip");
+			}
+
+			function Clean(){
+				document.getElementById("console").innerHTML = "~Application Output Console~";
+			}
+		</script>
+		<script type="text/javascript" src="GraphicEngine.js"></script>
+	</head>
+	<body onload="webGLStart();" id = 'body'>
+		<div id="container" class="container-fluid window-padding-0 full-size-container">
+			<div class="row window-padding-0 mid-size-screen-container" id = "first">
+				<div class="col-xs-5 window-padding-0" >
+					<canvas id="canvas" class="screen-lua" style="border: none;"></canvas>
+				</div>
+				<div class="col-xs-7 window-padding-0" >
+					<div id="editor"></div>
+				</div>
+			</div>
+			<div class= "row window-padding-0" id = "second">
+				<div class= "col-xs-12 window-padding-0">
+					<nav class="navbar navbar-inverse window-padding-0 menu">
+						<div class="container-fluid">
+							<div class="navbar-header">
+								<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+							        <span class="sr-only">Toggle navigation</span>
+							        <span class="icon-bar"></span>
+							        <span class="icon-bar"></span>
+							        <span class="icon-bar"></span>
+						    	</button>
+							</div>
+							<div class="collapse navbar-collapse window-padding-0" id="bs-example-navbar-collapse-1">
+								<ul class="nav navbar-nav">
+        							<li><a class="navbar-brand link" data-toggle="tooltip" data-placement="bottom" title="Clear console" style="padding: 7px 15px 0px 8px;" onclick="Clean()" href="#"><i class="fa fa-eraser fa-1x" aria-hidden="true"></i></a></li>
+        							<li><a class="navbar-brand link" data-toggle="tooltip" data-placement="bottom" title="Run" style="padding: 7px 15px 0px 20px;" onclick="Do()" href="#"><i class="fa fa-play-circle fa-1x" aria-hidden="true"></i></a></li>
+        							<li><a class="navbar-brand link" data-toggle="tooltip" data-placement="bottom" title="Export" style="padding: 7px 15px 0px 20px;" onclick="generateCode()" href="#"><i class="fa fa-download fa-1x" aria-hidden="true"></i></a></li>
+        							<li><a class="navbar-brand link" data-toggle="tooltip" data-placement="bottom" title="Refresh Camera" style="padding: 7px 15px 0px 20px;" onclick="resetCamera()" href="#"><i class="fa fa-refresh fa-1x" aria-hidden="true"></i></a></li>
+        						</ul>
+	    					</div>
+	    				</div>
+					</nav>
+				</div>
+			</div>
+			<div class= "row window-padding-0" id = "third">
+				<div class="col-xs-12 window-padding-0" >
+					<textarea readonly id="console">~Application Output Console~</textarea>
+				</div>
+			</div>
+		</div>
+		<script>
+			editor = ace.edit("editor");
+		    editor.setTheme("ace/theme/chaos");
+		    editor.getSession().setMode("ace/mode/lua");
+		    editor.setShowPrintMargin(false);
+
+		    function resizeAce() {
+		    	$('#editor').height($('#canvas').height());
+		    	editor.resize();
+		    }
+		    resizeAce();
+
+			$(window).resize(function(){
+				document.getElementById("canvas").width = 5*$(document).width()/12;
+	            document.getElementById("canvas").height = 80*$(document).height()/100;
+	            gl.viewportWidth = 5*$(document).width()/12;
+	            gl.viewportHeight = 80*$(document).height()/100;
+			   resizeAce();
+			});
+
+		</script>
+	</body>
+</html>
