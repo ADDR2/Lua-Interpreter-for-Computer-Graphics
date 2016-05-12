@@ -1486,6 +1486,7 @@
 							var right = eval(astNode.right);
 							if(right){
 								right = value(right.reverse(), true);
+								var infRot = "";
 								var array = [];
 								var cont = 0;
 
@@ -1493,14 +1494,24 @@
 									array.push(right[0].value);
 								}
 
-								if (right[1].type == "object" && right[1].value.length == 3 && numbers(right[1].value)){
+								if (right.length > 1 && right[1].type == "object" && right[1].value.length == 3 && numbers(right[1].value)){
 									array.push(right[1].value[0]);
 									array.push(right[1].value[1]);
 									array.push(right[1].value[2]);
 								}
 
+								if (right.length > 2 && right[2].type == "string"){
+									array.push(right[2].value);
+								}
+
 								if(array.length >= 4 && DisplayArray.length > 0){
-									DisplayArray[DisplayArray.length-1].Rotate(degToRad(array[0]), array.slice(1));
+									DisplayArray[DisplayArray.length-1].Rotate(degToRad(array[0]), array.slice(1, 4));
+									if(array.length > 4 && array[4].toLowerCase() == "inf"){
+										DisplayArray[DisplayArray.length-1].rotateForever = true;
+										DisplayArray[DisplayArray.length-1].infRotation = array.slice(1, 4);
+										DisplayArray[DisplayArray.length-1].infAngle = degToRad(array[0]);
+										infRot += "DisplayArray[DisplayArray.length-1].rotateForever = true;\n\t\t\t\tDisplayArray[DisplayArray.length-1].infRotation = ["+ array.slice(1, 4) +"];\n\t\t\t\tDisplayArray[DisplayArray.length-1].infAngle = "+degToRad(array[0])+";";
+									}
 									if(isALightTheLastDisplay){
 										if(isALightTheLastDisplay == 1){
 											var ind = arrayLights.length-1;
@@ -1518,7 +1529,7 @@
 								            gl.uniform3f(shaderProgram[currentShader].spotLightUniforms[ind].center, arraySpotLights[ind].center[0], arraySpotLights[ind].center[1], arraySpotLights[ind].center[2]);
 										}
 									}
-									codeFunctions += "\t\t\t\tDisplayArray[DisplayArray.length-1].Rotate(" + degToRad(array[0]) + ", [" + array.slice(1) + "]);";
+									codeFunctions += "\t\t\t\tDisplayArray[DisplayArray.length-1].Rotate(" + degToRad(array[0]) + ", [" + array.slice(1, 4) + "]);\n\t\t\t\t" + infRot + "\n";
 								}else
 									addToConsole("Execution Exception: no models displayed or invalid arguments");
 							}else

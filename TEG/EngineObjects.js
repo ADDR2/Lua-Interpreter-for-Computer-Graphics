@@ -100,8 +100,11 @@ function InitCube(cube){
     cube.ka = vec3.fromValues(0.4,0.4,0.4);
     cube.kd = vec3.fromValues(0.5,0.5,0.5);
     cube.ks = vec3.fromValues(0.6,0.6,0.6);
+    cube.infRotation = [];
+    cube.infAngle = 0.0;
     cube.shininess = 0.65;
     cube.displayMode = gl.TRIANGLES;
+    cube.rotateForever = false;
 
     cube.vertices =[0, 0, 0,
 1, 1, 0,
@@ -216,7 +219,7 @@ function InitCube(cube){
 
 
     cube.InitBuffers = function (){
-    	cube.cubeVertexPositionBuffer = gl.createBuffer();
+        cube.cubeVertexPositionBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, cube.cubeVertexPositionBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.vertices), gl.STATIC_DRAW);
             cube.cubeVertexPositionBuffer.itemSize = 3;
@@ -329,8 +332,11 @@ function InitCylinder(cylinder){
     cylinder.ka = vec3.fromValues(0.4,0.4,0.4);
     cylinder.kd = vec3.fromValues(0.5,0.5,0.5);
     cylinder.ks = vec3.fromValues(0.6,0.6,0.6);
+    cylinder.infRotation = [];
+    cylinder.infAngle = 0.0;
     cylinder.shininess = 0.65;
     cylinder.displayMode = gl.TRIANGLES;
+    cylinder.rotateForever = false;
 
     cylinder.vertices =[-0.874757, -0.060756, 0.654717,
 -0.413635, -0.766127, 1.193065,
@@ -1577,8 +1583,11 @@ function InitSphere(sphere){
     sphere.ka = vec3.fromValues(0.4,0.4,0.4);
     sphere.kd = vec3.fromValues(0.5,0.5,0.5);
     sphere.ks = vec3.fromValues(0.6,0.6,0.6);
+    sphere.infRotation = [];
+    sphere.infAngle = 0.0;
     sphere.shininess = 0.65;
     sphere.displayMode = gl.TRIANGLES;
+    sphere.rotateForever = false;
 
     sphere.vertices =[-0.82804, 0.511192, -1.019422,
 -0.808826, 0.706282, -1.019422,
@@ -10313,8 +10322,11 @@ function InitCone(cone){
     cone.ka = vec3.fromValues(0.4,0.4,0.4);
     cone.kd = vec3.fromValues(0.5,0.5,0.5);
     cone.ks = vec3.fromValues(0.6,0.6,0.6);
+    cone.infRotation = [];
+    cone.infAngle = 0.0;
     cone.shininess = 0.65;
     cone.displayMode = gl.TRIANGLES;
+    cone.rotateForever = false;
 
     cone.vertices =[-0.210722, -0.21706, -0.825289,
 0.17196, 1.78294, 0.098592,
@@ -10967,8 +10979,11 @@ function InitGrid(grid){
     grid.ka = vec3.fromValues(0.4,0.4,0.4);
     grid.kd = vec3.fromValues(0.5,0.5,0.5);
     grid.ks = vec3.fromValues(0.6,0.6,0.6);
+    grid.infRotation = [];
+    grid.infAngle = 0.0;
     grid.shininess = 0.65;
     grid.displayMode = gl.TRIANGLES;
+    grid.rotateForever = false;
 
 
     grid.vertices =[4.573399, 3.860995, 1.7764,
@@ -12024,8 +12039,11 @@ function InitObj(obj, verts, smoothNorms, coords, center, flatNorms){
     obj.ka = vec3.fromValues(0.4,0.4,0.4);
     obj.kd = vec3.fromValues(0.5,0.5,0.5);
     obj.ks = vec3.fromValues(0.6,0.6,0.6);
+    obj.infRotation = [];
+    obj.infAngle = 0.0;
     obj.shininess = 0.65;
     obj.displayMode = gl.TRIANGLES;
+    obj.rotateForever = false;
 
     obj.vertices = verts;
 

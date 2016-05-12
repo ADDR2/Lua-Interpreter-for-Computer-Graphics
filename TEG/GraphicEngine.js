@@ -220,7 +220,8 @@
 
         for (var key in DisplayArray){
 
-            DisplayArray[key].Rotate(degToRad(rCube), [1, 1, 1]);
+            if(DisplayArray[key].rotateForever)
+                DisplayArray[key].Rotate(DisplayArray[key].infAngle, DisplayArray[key].infRotation);
             DisplayArray[key].Display(shaderProgram[currentShader], camera.viewMatrix, camera.position, pMatrix, shaderProgram[currentShader].objMaterial);
 
         }
