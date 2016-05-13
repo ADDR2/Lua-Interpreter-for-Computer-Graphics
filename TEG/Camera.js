@@ -10,7 +10,7 @@ var lastRotX = 0.0;
 function handleKeyDown(event) {
     if(cameraReady)
 		currentlyPressedKeys[event.keyCode] = true;
-	if(event.keyCode == 13)
+	if(event.keyCode == 13 && enterActivated)
 		Do();
 }
 

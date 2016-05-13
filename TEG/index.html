@@ -396,7 +396,7 @@
 					var resultCode = code.replace("InIt", codeFunctions+"\n\t\t\t}");
 					graphicEngine = graphicEngine.replace("SeT", "initScene();");
 					var zip = new JSZip();
-					zip.file("example.html", resultCode);
+					zip.file("Template.html", resultCode);
 					zip.file("webgl-utils.js", webgl_utils);
 					zip.file("glMatrix.js", glMatrix);
 					zip.file("Globals.js", globals);
@@ -406,7 +406,7 @@
 					zip.file("GraphicEngine.js", graphicEngine);
 					zip.file("InitObj.js", initObject);
 					var content = zip.generate({type:"blob"});
-					saveAs(content, "example.zip");
+					saveAs(content, "Template.zip");
 				}
 			}
 
@@ -414,7 +414,7 @@
 				var resultCode = code.replace("InIt", codeFunctions+"\n\t\t\t}");
 					graphicEngine = graphicEngine.replace("SeT", "initScene();");
 					var zip = new JSZip();
-					zip.file("example.html", resultCode);
+					zip.file("Template.html", resultCode);
 					zip.file("webgl-utils.js", webgl_utils);
 					zip.file("glMatrix.js", glMatrix);
 					zip.file("Globals.js", globals);
@@ -425,7 +425,7 @@
 					zip.file("GraphicEngine.js", graphicEngine);
 					zip.file("InitObj.js", initObject);
 					var content = zip.generate({type:"blob"});
-					saveAs(content, "example.zip");
+					saveAs(content, "Template.zip");
 			}
 
 			function Clean(){
@@ -462,6 +462,7 @@
         							<li><a class="navbar-brand link" data-toggle="tooltip" data-placement="bottom" title="Run" style="padding: 7px 15px 0px 20px;" onclick="Do()" href="#"><i class="fa fa-play-circle fa-1x" aria-hidden="true"></i></a></li>
         							<li><a class="navbar-brand link" data-toggle="tooltip" data-placement="bottom" title="Export" style="padding: 7px 15px 0px 20px;" onclick="generateCode()" href="#"><i class="fa fa-download fa-1x" aria-hidden="true"></i></a></li>
         							<li><a class="navbar-brand link" data-toggle="tooltip" data-placement="bottom" title="Refresh Camera" style="padding: 7px 15px 0px 20px;" onclick="resetCamera()" href="#"><i class="fa fa-refresh fa-1x" aria-hidden="true"></i></a></li>
+        							<li><a class="navbar-brand link" data-toggle="tooltip" data-placement="bottom" title="Enter key to run" style="padding: 7px 15px 0px 20px;" onclick="enterKey()" href="#"><i class="fa fa-paragraph fa-1x" aria-hidden="true"></i></a></li>
         						</ul>
 	    					</div>
 	    				</div>

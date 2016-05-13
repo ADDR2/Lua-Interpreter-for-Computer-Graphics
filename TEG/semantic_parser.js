@@ -5,6 +5,11 @@
 			var translateCode = false;
 			var codeFunctions;
 			var svCont = -1;
+			var enterActivated = false;
+
+			function enterKey(){
+				enterActivated = !enterActivated;
+			}
 
 			function modifyShader_Point(){
 				var str = document.getElementById("shader-fPhong").innerHTML;
@@ -1576,11 +1581,15 @@
 						case 'Print':
 							var right = eval(astNode.right);
 							var rsize = Object.size(right);
+							var nil = "nil";
 							if(right){
 								right = value(right.reverse(), true);
 								var str = "";
 								for (var i in right){
-									str += right[i].value + addTab((right[i].value+"").length/4);
+									if(right[i].value == null && right[i].value+"" != "0" && right[i].value+"" != "")
+										str += nil + addTab(("nil").length/4);
+									else
+										str += right[i].value + addTab((right[i].value+"").length/4);
 								}
 								addToConsole(str);
 							}
