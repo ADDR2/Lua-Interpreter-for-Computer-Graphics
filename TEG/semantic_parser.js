@@ -518,8 +518,11 @@
 								executionstack.pop();
 
 							}else{
-								eval(astNode.eli);
-								eval(astNode.el);
+								var left = eval(astNode.eli);
+								if(left)
+									v = left
+								else
+									v = eval(astNode.el);
 							}
 						break;
 						case 'Else':
