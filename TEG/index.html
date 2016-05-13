@@ -376,6 +376,7 @@
 		<script type="text/javascript" src="Translation.js"></script>
 		<script>
 			function Do(){
+				addToConsole("Console Message: Execution started");
 				svCont = -1;
 				sceneVertices = "var sceneObjects = [];\n";
 				codeFunctions = "function initScene(){\n\t\t\t\tvar Obj;\n\t\t\t\tvar aux;\n\t\t\t\tvar Light;\n\t\t\t\tvar verts = [];\n\t\t\t\tvar norms = [];\n\t\t\t\tvar coords = [];\n\t\t\t\tvar center = [];\n\t\t\t\tvar flatNorms = [];\n";
@@ -408,6 +409,7 @@
 					var content = zip.generate({type:"blob"});
 					saveAs(content, "Template.zip");
 				}
+				addToConsole("Console Message: Execution ended");
 			}
 
 			function generateCode(){
