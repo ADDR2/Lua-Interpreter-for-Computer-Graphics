@@ -30,8 +30,8 @@ function handleMouseMove(event) {
 
 	var canvas = document.getElementById("canvas");
 
-    cursorPosX = event.x - canvas.offsetLeft;
-    cursorPosY = event.y - canvas.offsetTop;
+    cursorPosX = event.offsetX - canvas.offsetLeft;
+    cursorPosY = event.offsetY - canvas.offsetTop;
 }
 
 
